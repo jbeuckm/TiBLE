@@ -176,9 +176,9 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
     CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
     peripheral.delegate = self;
-    [peripheral discoverServices:@[serviceUUID]];
-    
-    NSString *value = [[NSString alloc] initWithFormat:@"%@", peripheral.name];
+//    [peripheral discoverServices:@[serviceUUID]];
+    [peripheral discoverServices:nil];
+
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
@@ -195,11 +195,12 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     
-//    NSString *uuid = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
+    NSString *uuid = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
     [self fireEvent:@"discover" withObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                                 peripheral.name, @"name",
+                                                uuid, @"uuid",
                                                 RSSI, @"rssi",
                                                 nil]];
      
@@ -209,7 +210,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
 //    [self stopScan:nil];
     
-//    [central connectPeripheral:peripheral options:nil];
+    [central connectPeripheral:peripheral options:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
@@ -254,7 +255,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
     
-//    [self fireEvent:@"characteristics" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"characteristics" withObject:[self eventForPeripheral:peripheral]];
 
     if (error != nil) {
         NSLog(@"[ERROR] Error discovering characteristic: %@", [error localizedDescription]);
@@ -278,7 +279,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
     
-//    [self fireEvent:@"services" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"services" withObject:[self eventForPeripheral:peripheral]];
 
     if (error != nil) {
         NSLog(@"[ERROR] Error discovering service: %@", [error localizedDescription]);
@@ -302,7 +303,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     
-//    [self fireEvent:@"value" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"value" withObject:[self eventForPeripheral:peripheral]];
 
     if (error != nil) {
         NSLog(@"[ERROR] Error updating value: %@", error.localizedDescription);
