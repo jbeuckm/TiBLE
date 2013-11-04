@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 0.1
+apiversion: 2
+description: Act as CoreBluetooth Central
+author: Joe Beuckman
+license: no
+copyright: no
+
+
+# these should not be edited
+name: TiBLE
+moduleid: org.beuckman.tible
+guid: ba095e33-4159-4a8a-8cd3-2b35cde1c52c
+platform: iphone
+minsdk: 3.1.0.GA
