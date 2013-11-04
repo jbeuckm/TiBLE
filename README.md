@@ -1,4 +1,4 @@
-## Titanium Bleatooth LE 
+## Titanium Bluetooth LE 
 
 At this point, the module can discover BLE devices.
 

@@ -225,13 +225,30 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     
-//    [self fireEvent:@"state" withObject:[NSDictionary dictionaryWithObjectsAndKeys:central.state, @"state", nil]];
+    NSString *state;
     
     if (central.state == CBCentralManagerStatePoweredOn) {
+        state = @"on";
         [self startScan:nil];
     }
-}
+    if (central.state == CBCentralManagerStateUnknown) {
+        state = @"unknown";
+    }
+    if (central.state == CBCentralManagerStateResetting) {
+        state = @"resetting";
+    }
+    if (central.state == CBCentralManagerStateUnsupported) {
+        state = @"unsupported";
+    }
+    if (central.state == CBCentralManagerStateUnauthorized) {
+        state = @"unauthorized";
+    }
+    if (central.state == CBCentralManagerStatePoweredOff) {
+        state = @"off";
+    }
 
+    [self fireEvent:@"state" withObject:[NSDictionary dictionaryWithObjectsAndKeys:state, @"state", nil]];
+}
 
 #pragma mark - Protocol Methods - CBPeripheralDelegate
 
