@@ -207,20 +207,31 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
     NSArray *keys = [advertisementData allKeys];
     for (int i = 0; i < [keys count]; ++i) {
+        
         id key = [keys objectAtIndex: i];
+        
         NSString *keyName = (NSString *) key;
         NSObject *value = [advertisementData objectForKey: key];
+
         if ([value isKindOfClass: [NSArray class]]) {
+
             printf("   key: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding]);
             NSArray *values = (NSArray *) value;
+            
             for (int j = 0; j < [values count]; ++j) {
                 if ([[values objectAtIndex: j] isKindOfClass: [CBUUID class]]) {
+
                     CBUUID *uuid = [values objectAtIndex: j];
+                    NSLog(@"%@", uuid);
+                    
                     NSData *data = uuid.data;
                     printf("      uuid(%d):", j);
                     
-                    NSString *str = [[[NSString alloc] initWithData:uuid.data
-                                           encoding:NSUTF8StringEncoding] autorelease];
+                    for (int k = 0; k < data.length; ++k)
+                        printf(" %2X", ((UInt8 *) data.bytes)[k]);
+                    printf("\n");
+
+                    NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
 
                     if (str)
                         [services addObject:str];
