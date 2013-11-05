@@ -15,6 +15,8 @@
 @property (nonatomic, strong) CBCentralManager *manager;
 @property (nonatomic, strong) CBPeripheral *peripheral;
 
+@property (nonatomic, strong) NSMutableDictionary *peripherals;
+
 @end
 
 
@@ -59,6 +61,8 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 	[super startup];
 
     self.manager = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
+    
+    self.peripherals = [[NSMutableDictionary alloc] init];
 
 	NSLog(@"[INFO] %@ loaded",self);
 }
@@ -186,42 +190,40 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     NSLog(@"[INFO] didDisconnectPeripheral %@", peripheral.name);
     [self fireEvent:@"disconnect" withObject:[self eventForPeripheral:peripheral]];
 
-    if (self.peripheral == peripheral) {
-        self.peripheral = nil;
-    }
+//    if (self.peripheral == peripheral) {
+//        self.peripheral = nil;
+//    }
     
     [self startScan:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     
-    NSString *uuid = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
+//    NSString *uuid = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID));
+    
+    NSMutableDictionary *report = [NSMutableDictionary dictionaryWithDictionary:advertisementData];
+    [report setObject:peripheral.name forKey:@"name"];
+//    [report setObject:uuid forKey:@"uuid"];
+    [report setObject:RSSI forKey:@"rssi"];
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
-    [self fireEvent:@"discover" withObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                peripheral.name, @"name",
-                                                uuid, @"uuid",
-                                                RSSI, @"rssi",
-                                                nil]];
-     
-//    if (self.peripheral != peripheral) {
-//        self.peripheral = peripheral;
-//    }
+    [self fireEvent:@"discover" withObject:report];
     
-//    [self stopScan:nil];
-    
-    [central connectPeripheral:peripheral options:nil];
+    // keep a reference to the discovered peripheral
+//    [self.peripherals setObject:peripheral forKey:uuid];
+
+//    [central connectPeripheral:peripheral options:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     
     [self fireEvent:@"connectFail" withObject:[self eventForPeripheral:peripheral]];
 
-    if (self.peripheral == peripheral) {
-        self.peripheral = nil;
-    }
+//    if (self.peripheral == peripheral) {
+//        self.peripheral = nil;
+//    }
     
-    [self startScan:nil];
+//    [self startScan:nil];
 }
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
