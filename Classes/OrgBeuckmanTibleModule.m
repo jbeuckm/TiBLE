@@ -202,59 +202,11 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     //(__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
     
     NSMutableDictionary *report = [[NSMutableDictionary alloc] init];
-    
-    NSMutableArray *services = [[NSMutableArray alloc] init];
 
-    NSArray *keys = [advertisementData allKeys];
-    for (int i = 0; i < [keys count]; ++i) {
-        
-        id key = [keys objectAtIndex: i];
-        
-        NSString *keyName = (NSString *) key;
-        NSObject *value = [advertisementData objectForKey: key];
-
-        if ([value isKindOfClass: [NSArray class]]) {
-
-            printf("   key: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding]);
-            NSArray *values = (NSArray *) value;
-            
-            for (int j = 0; j < [values count]; ++j) {
-                if ([[values objectAtIndex: j] isKindOfClass: [CBUUID class]]) {
-
-                    CBUUID *uuid = [values objectAtIndex: j];
-                    NSLog(@"%@", uuid);
-                    
-                    NSData *data = uuid.data;
-                    printf("      uuid(%d):", j);
-                    
-                    for (int k = 0; k < data.length; ++k)
-                        printf(" %2X", ((UInt8 *) data.bytes)[k]);
-                    printf("\n");
-
-                    NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
-
-                    if (str)
-                        [services addObject:str];
-                    
-                } else {
-                    const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
-                    printf("      value(%d): %s\n", j, valueString);
-                    
-                    if ([value description])
-                        [services addObject:[value description]];
-                }
-            }
-        } else {
-            const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
-            printf("   key: %s, value: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding], valueString);
-        }
-    }
-
-    
     [report setObject:peripheral.name forKey:@"name"];
     [report setObject:uuid forKey:@"uuid"];
     [report setObject:RSSI forKey:@"rssi"];
-    [report setObject:services forKey:@"services"];
+//    [report setObject:[self extractServicesFromAdvertisement:advertisementData] forKey:@"services"];
     
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
@@ -279,6 +231,62 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
     [self startScan:nil];
 }
+
+
+-(NSDictionary *)extractServicesFromAdvertisement:(NSDictionary*)advertisementData
+{
+    return advertisementData;
+    
+    NSMutableArray *services = [[NSMutableArray alloc] init];
+    
+
+    NSArray *keys = [advertisementData allKeys];
+    for (int i = 0; i < [keys count]; ++i) {
+        
+        id key = [keys objectAtIndex: i];
+        
+        NSString *keyName = (NSString *) key;
+        NSObject *value = [advertisementData objectForKey: key];
+        
+        if ([value isKindOfClass: [NSArray class]]) {
+            
+            printf("   key: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding]);
+            NSArray *values = (NSArray *) value;
+            
+            for (int j = 0; j < [values count]; ++j) {
+                if ([[values objectAtIndex: j] isKindOfClass: [CBUUID class]]) {
+                    
+                    CBUUID *uuid = [values objectAtIndex: j];
+                    NSLog(@"%@", uuid);
+                    
+                    NSData *data = uuid.data;
+                    printf("      uuid(%d):", j);
+                    
+                    for (int k = 0; k < data.length; ++k)
+                        printf(" %2X", ((UInt8 *) data.bytes)[k]);
+                    printf("\n");
+                    
+                    NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
+                    
+                    if (str)
+                        [services addObject:str];
+                    
+                } else {
+                    const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
+                    printf("      value(%d): %s\n", j, valueString);
+                    
+                    if ([value description])
+                        [services addObject:[value description]];
+                }
+            }
+        } else {
+            const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
+            printf("   key: %s, value: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding], valueString);
+        }
+    }
+    
+}
+
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     
