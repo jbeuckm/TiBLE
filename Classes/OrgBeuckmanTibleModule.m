@@ -13,7 +13,9 @@
 
 @property (nonatomic, strong) NSMutableData *data;
 @property (nonatomic, strong) CBCentralManager *manager;
-@property (nonatomic, strong) CBPeripheral *peripheral;
+//@property (nonatomic, strong) CBPeripheral *peripheral;
+
+@property (nonatomic, strong) NSMutableDictionary *peripherals;
 
 @end
 
@@ -24,6 +26,7 @@
 
 static NSString *const kServiceUUID = @"5B2EABB7-93CB-4C6A-94D4-C6CF2F331ED5";
 static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC940";
+
 
 
 #pragma mark Internal
@@ -68,9 +71,9 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 	// this method is called when the module is being unloaded
 	// typically this is during shutdown. make sure you don't do too
 	// much processing here or the app will be quit forceably
-    if (self.peripheral != nil) {
-        [self.manager cancelPeripheralConnection:self.peripheral];
-    }
+//    if (self.peripheral != nil) {
+//        [self.manager cancelPeripheralConnection:self.peripheral];
+//    }
 	
 	// you *must* call the superclass
 	[super shutdown:sender];
@@ -186,30 +189,72 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     NSLog(@"[INFO] didDisconnectPeripheral %@", peripheral.name);
     [self fireEvent:@"disconnect" withObject:[self eventForPeripheral:peripheral]];
 
-    if (self.peripheral == peripheral) {
-        self.peripheral = nil;
-    }
+//    if (self.peripheral == peripheral) {
+//        self.peripheral = nil;
+//    }
     
     [self startScan:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     
-    NSString *uuid = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
+    NSString *uuid = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID));
+    //(__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID);
+    
+    NSMutableDictionary *report = [[NSMutableDictionary alloc] init];
+    
+    NSMutableArray *services = [[NSMutableArray alloc] init];
+
+    NSArray *keys = [advertisementData allKeys];
+    for (int i = 0; i < [keys count]; ++i) {
+        id key = [keys objectAtIndex: i];
+        NSString *keyName = (NSString *) key;
+        NSObject *value = [advertisementData objectForKey: key];
+        if ([value isKindOfClass: [NSArray class]]) {
+            printf("   key: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding]);
+            NSArray *values = (NSArray *) value;
+            for (int j = 0; j < [values count]; ++j) {
+                if ([[values objectAtIndex: j] isKindOfClass: [CBUUID class]]) {
+                    CBUUID *uuid = [values objectAtIndex: j];
+                    NSData *data = uuid.data;
+                    printf("      uuid(%d):", j);
+                    
+                    NSString *str = [[[NSString alloc] initWithData:uuid.data
+                                           encoding:NSUTF8StringEncoding] autorelease];
+
+                    if (str)
+                        [services addObject:str];
+                    
+                } else {
+                    const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
+                    printf("      value(%d): %s\n", j, valueString);
+                    
+                    if ([value description])
+                        [services addObject:[value description]];
+                }
+            }
+        } else {
+            const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
+            printf("   key: %s, value: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding], valueString);
+        }
+    }
+
+    
+    [report setObject:peripheral.name forKey:@"name"];
+    [report setObject:uuid forKey:@"uuid"];
+    [report setObject:RSSI forKey:@"rssi"];
+    [report setObject:services forKey:@"services"];
+    
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
-    [self fireEvent:@"discover" withObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                peripheral.name, @"name",
-                                                uuid, @"uuid",
-                                                RSSI, @"rssi",
-                                                nil]];
+    [self fireEvent:@"discover" withObject:report];
      
 //    if (self.peripheral != peripheral) {
 //        self.peripheral = peripheral;
 //    }
     
 //    [self stopScan:nil];
-    
+
     [central connectPeripheral:peripheral options:nil];
 }
 
@@ -217,9 +262,9 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
     [self fireEvent:@"connectFail" withObject:[self eventForPeripheral:peripheral]];
 
-    if (self.peripheral == peripheral) {
-        self.peripheral = nil;
-    }
+//    if (self.peripheral == peripheral) {
+//        self.peripheral = nil;
+//    }
     
     [self startScan:nil];
 }
