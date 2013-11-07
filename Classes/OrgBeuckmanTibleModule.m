@@ -220,9 +220,9 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     
+    NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
+
     NSString *uuid = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID));
-    
-    [self extractServicesFromAdvertisement:advertisementData];
 
     NSMutableDictionary *report = [[NSMutableDictionary alloc] init];
     if (peripheral.name)
@@ -232,7 +232,10 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     if (RSSI)
     [report setObject:RSSI forKey:@"rssi"];
     
-    NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
+    if (advertisementData)
+        [report setObject:[self summarizeAdvertisement:advertisementData] forKey:@"advertisementData"];
+
+    
     [self fireEvent:@"discover" withObject:report];
     
     
@@ -259,13 +262,12 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 }
 
 
--(NSDictionary *)extractServicesFromAdvertisement:(NSDictionary*)advertisementData
+-(NSDictionary *)summarizeAdvertisement:(NSDictionary*)advertisementData
 {
-    NSLog(@"[INFO] advertisementData = %@", advertisementData);
+    NSLog(@"[TRACE] advertisementData = %@", advertisementData);
     
-    
+    NSMutableDictionary *summary = [[NSMutableDictionary alloc] init];
     NSMutableArray *services = [[NSMutableArray alloc] init];
-    
 
     NSArray *keys = [advertisementData allKeys];
     for (int i = 0; i < [keys count]; ++i) {
@@ -277,7 +279,6 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
         
         if ([value isKindOfClass: [NSArray class]]) {
             
-            printf("   key: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding]);
             NSArray *values = (NSArray *) value;
             
             for (int j = 0; j < [values count]; ++j) {
@@ -287,36 +288,46 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
                     
                     NSString *uuidString = [self stringFromCBUUID:uuid];
                     [services addObject:uuidString];
-
-                    NSLog(@"uuidString: %@", uuidString);
-/*
-                    NSData *data = uuid.data;
-                    printf("      uuid(%d):", j);
                     
-                    for (int k = 0; k < data.length; ++k)
-                        printf(" %2X", ((UInt8 *) data.bytes)[k]);
-                    printf("\n");
-                    
-                    NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
-*/
-//                    if (str)
-//                        [services addObject:str];
-                    
-                } else {
-                    const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
-                    printf("      value(%d): %s\n", j, valueString);
-                    
-//                    if ([value description])
-//                        [services addObject:[value description]];
+                }
+                else {
+                    if ([value description]) {
+                        [services addObject:[value description]];
+                    }
                 }
             }
-        } else {
-            const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
-            printf("   key: %s, value: %s\n", [keyName cStringUsingEncoding: NSUTF8StringEncoding], valueString);
+        }
+        else if ([value isKindOfClass: [NSDictionary class]]) {
+            NSLog(@"skipping advertised NSDictionary %@", value);
+/*
+            NSDictionary *subvalues = (NSDictionary *)value;
+            NSArray *subkeys = [subvalues allKeys];
+            for (int i = 0; i < [subkeys count]; ++i) {
+                id subkey = [keys objectAtIndex: i];
+                
+                NSString *subkeyName = (NSString *)subkey;
+                NSObject *subvalue = [subvalues objectForKey: subkey];
+
+                if ([[subvalues objectForKey:subkey] isKindOfClass: [CBUUID class]]) {
+                    CBUUID *uuid = [subvalues objectForKey:subkey];
+                    
+                    NSString *uuidString = [self stringFromCBUUID:uuid];
+                    [summary addObject:uuidString forKey:subkeyName];
+                }
+                else {
+                    [summary addObject:[subvalues objectForKey:subkey] forKey:subkeyName];
+                }
+            }
+ */
+        }
+        else {
+            [summary addObject:[value description] forKey:keyName];
         }
     }
     
-    return advertisementData;
+    [summary addObject:services forKey:@"services"];
+    
+    return summary;
 }
 
 
