@@ -11,7 +11,8 @@ ble.addEventListener("state", function(e){
 });
 
 ble.addEventListener("discover", function(e){
-        label.text = "discovered "+e.name+" at "+e.rssi;
+        Ti.API.info(“discovered "+e.name+" at "+e.rssi+”db”);
+        Ti.API.info(e.services);
 });
 ble.addEventListener("connect", function(e){
         alert(e);
@@ -32,6 +33,7 @@ ble.addEventListener("characteristics", function(e){
 ble.addEventListener("value", function(e){
         alert(e);
 });
+
 ble.startScan();
 
 ```
