@@ -45,11 +45,14 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 {
     NSString *uuid = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID));
 
-    NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
-            peripheral.name, @"name",
-            uuid, @"uuid",
-            peripheral.RSSI, @"rssi",
-            nil];
+    NSMutableDictionary *event = [[NSMutableDictionary alloc]  init];
+    
+    if (peripheral.name)
+        [event setObject:peripheral.name forKey:@"name"];
+    if (uuid)
+        [event setObject:uuid forKey:@"uuid"];
+    if (peripheral.RSSI)
+        [event setObject:peripheral.RSSI forKey:@"rssi"];
     
     return event;
 }
@@ -204,8 +207,11 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     [self extractServicesFromAdvertisement:advertisementData];
 
     NSMutableDictionary *report = [[NSMutableDictionary alloc] init];
+    if (peripheral.name)
     [report setObject:peripheral.name forKey:@"name"];
+    if (uuid)
     [report setObject:uuid forKey:@"uuid"];
+    if (RSSI)
     [report setObject:RSSI forKey:@"rssi"];
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
