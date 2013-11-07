@@ -291,8 +291,8 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
                     
                 }
                 else {
-                    if ([value description]) {
-                        [services addObject:[value description]];
+                    if ([[values objectAtIndex: j] description]) {
+                        [services addObject:[[values objectAtIndex: j] description]];
                     }
                 }
             }
