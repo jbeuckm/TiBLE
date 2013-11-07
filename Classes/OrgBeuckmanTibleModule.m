@@ -48,7 +48,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
             peripheral.name, @"name",
             uuid, @"uuid",
-//            peripheral.RSSI, @"rssi",
+            peripheral.RSSI, @"rssi",
             nil];
     
     return event;
@@ -203,18 +203,16 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
     [self extractServicesFromAdvertisement:advertisementData];
 
-    NSMutableDictionary *report = [[NSMutableDictionary alloc] dictionaryWithObjectsAndKeys:
-                                   peripheral.name, @"name",
-                                   uuid, @"uuid",
-                                   RSSI, @"rssi",
-     nil];
-    
+    NSMutableDictionary *report = [[NSMutableDictionary alloc] init];
+    [report setObject:peripheral.name forKey:@"name"];
+    [report setObject:uuid forKey:@"uuid"];
+    [report setObject:RSSI forKey:@"rssi"];
     
     NSLog(@"[INFO] didDiscoverPeripheral %@", peripheral.name);
     [self fireEvent:@"discover" withObject:report];
     
     
-    
+/*
     if (self.peripheral != peripheral) {
         self.peripheral = peripheral;
     }
@@ -222,6 +220,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     [self stopScan:nil];
     
     [central connectPeripheral:peripheral options:nil];
+*/
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
