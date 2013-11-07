@@ -11,7 +11,7 @@ ble.addEventListener("state", function(e){
 });
 
 ble.addEventListener("discover", function(e){
-        Ti.API.info(“discovered "+e.name+" at "+e.rssi+”db”);
+        Ti.API.info("discovered "+e.name+" at "+e.rssi+"db");
         Ti.API.info(e.services);
 });
 ble.addEventListener("connect", function(e){
