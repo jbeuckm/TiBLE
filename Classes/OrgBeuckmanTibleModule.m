@@ -215,7 +215,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
         self.peripheral = nil;
     }
     
-    [self startScan:nil];
+//    [self startScan:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
@@ -258,7 +258,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
         self.peripheral = nil;
     }
     
-    [self startScan:nil];
+//    [self startScan:nil];
 }
 
 
@@ -337,7 +337,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     
     if (central.state == CBCentralManagerStatePoweredOn) {
         state = @"on";
-        [self startScan:nil];
+//        [self startScan:nil];
     }
     if (central.state == CBCentralManagerStateUnknown) {
         state = @"unknown";
