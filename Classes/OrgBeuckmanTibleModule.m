@@ -77,9 +77,9 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 	// this method is called when the module is being unloaded
 	// typically this is during shutdown. make sure you don't do too
 	// much processing here or the app will be quit forceably
-//    if (self.peripheral != nil) {
-//        [self.manager cancelPeripheralConnection:self.peripheral];
-//    }
+    if (self.peripheral != nil) {
+        [self.manager cancelPeripheralConnection:self.peripheral];
+    }
 	
 	// you *must* call the superclass
 	[super shutdown:sender];
@@ -125,23 +125,39 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 #pragma Public APIs
 
-- (void)startScan:(id)args {
+/*
+ * Accepts an array of service UUID strings (must scan for particular services to operate in background)
+ */
+- (void)startScan:(NSArray *)args {
 
     ENSURE_UI_THREAD_1_ARG(args);
-    ENSURE_SINGLE_ARG(args, NSDictionary);
-    
-    NSString *uuid = [TiUtils stringValue:[args objectForKey:@"uuid"]];
-    
-//    if (!uuid) {
-        // default service uuid
-        uuid = kServiceUUID;
-//    }
-    
+    NSLog(@"[DEBUG] startScan received args %@", args);
+
     NSDictionary *options = @{CBCentralManagerScanOptionAllowDuplicatesKey: @YES};
     
-    CBUUID *serviceUUID = [CBUUID UUIDWithString:kFlexServiceUUID];
-    [self.manager scanForPeripheralsWithServices:@[serviceUUID] options:options];
-//    [self.manager scanForPeripheralsWithServices:nil options:options];
+    if (args.count == 0) {
+        NSLog(@"[INFO] TiBLE scanning for any(all) service UUIDs");
+        [self.manager scanForPeripheralsWithServices:nil options:options];
+    }
+    else {
+        NSMutableArray *uuids =[[NSMutableArray alloc] init];
+        
+        for (int i=0; i<args.count; i++) {
+            
+            NSString *uuidString = [TiUtils stringValue:[args objectAtIndex:i]];
+            
+            @try {
+                NSLog(@"[DEBUG] scanning with uuid %@", uuidString);
+                CBUUID *serviceUUID = [CBUUID UUIDWithString:uuidString];
+                [uuids addObject:serviceUUID];
+            }
+            @catch (NSException *exception) {
+                NSLog(@"[ERROR] %@", exception.reason);
+            }
+        }
+    
+        [self.manager scanForPeripheralsWithServices:uuids options:options];
+    }
 }
 
 - (void)stopScan:(id)args {
@@ -248,7 +264,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     NSLog(@"[INFO] advertisementData = %@", advertisementData);
     
     
-//    NSMutableArray *services = [[NSMutableArray alloc] init];
+    NSMutableArray *services = [[NSMutableArray alloc] init];
     
 
     NSArray *keys = [advertisementData allKeys];
@@ -268,8 +284,12 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
                 if ([[values objectAtIndex: j] isKindOfClass: [CBUUID class]]) {
                     
                     CBUUID *uuid = [values objectAtIndex: j];
-                    NSLog(@"%@", uuid);
                     
+                    NSString *uuidString = [self stringFromCBUUID:uuid];
+                    [services addObject:uuidString];
+
+                    NSLog(@"uuidString: %@", uuidString);
+/*
                     NSData *data = uuid.data;
                     printf("      uuid(%d):", j);
                     
@@ -278,7 +298,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
                     printf("\n");
                     
                     NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
-                    
+*/
 //                    if (str)
 //                        [services addObject:str];
                     
@@ -390,5 +410,29 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     }
 }
 
+
+- (NSString *)stringFromCBUUID:(CBUUID *)cbuuid;
+{
+    NSData *data = [cbuuid data];
+    
+    NSUInteger bytesToConvert = [data length];
+    const unsigned char *uuidBytes = [data bytes];
+    NSMutableString *outputString = [NSMutableString stringWithCapacity:16];
+    
+    for (NSUInteger currentByteIndex = 0; currentByteIndex < bytesToConvert; currentByteIndex++)
+    {
+        switch (currentByteIndex)
+        {
+            case 3:
+            case 5:
+            case 7:
+            case 9:[outputString appendFormat:@"%02x-", uuidBytes[currentByteIndex]]; break;
+            default:[outputString appendFormat:@"%02x", uuidBytes[currentByteIndex]];
+        }
+        
+    }
+    
+    return outputString;
+}
 
 @end
