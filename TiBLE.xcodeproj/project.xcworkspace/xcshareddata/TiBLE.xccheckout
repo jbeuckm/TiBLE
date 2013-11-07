@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>F0ABB01D-1708-4087-93D8-CFEDB55A79A9</string>
+	<key>IDESourceControlProjectName</key>
+	<string>TiBLE</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>1BA91C8C-98A9-4D6A-A3D7-F98DB91C5878</key>
+		<string>ssh://github.com/jbeuckm/TiBLE.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>TiBLE.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>1BA91C8C-98A9-4D6A-A3D7-F98DB91C5878</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/jbeuckm/TiBLE.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>1BA91C8C-98A9-4D6A-A3D7-F98DB91C5878</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>1BA91C8C-98A9-4D6A-A3D7-F98DB91C5878</string>
+			<key>IDESourceControlWCCName</key>
+			<string>TiBLE</string>
+		</dict>
+	</array>
+</dict>
+</plist>

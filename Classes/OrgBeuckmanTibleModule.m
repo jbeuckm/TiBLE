@@ -23,6 +23,8 @@
 #pragma mark - Constants
 
 static NSString *const kServiceUUID = @"5B2EABB7-93CB-4C6A-94D4-C6CF2F331ED5";
+static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA";
+
 static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC940";
 
 
@@ -136,10 +138,10 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 //    }
     
     NSDictionary *options = @{CBCentralManagerScanOptionAllowDuplicatesKey: @YES};
-
-    CBUUID *serviceUUID = [CBUUID UUIDWithString:uuid];
-//    [self.manager scanForPeripheralsWithServices:@[serviceUUID] options:options];
-    [self.manager scanForPeripheralsWithServices:nil options:options];
+    
+    CBUUID *serviceUUID = [CBUUID UUIDWithString:kFlexServiceUUID];
+    [self.manager scanForPeripheralsWithServices:@[serviceUUID] options:options];
+//    [self.manager scanForPeripheralsWithServices:nil options:options];
 }
 
 - (void)stopScan:(id)args {
@@ -245,9 +247,8 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 {
     NSLog(@"[INFO] advertisementData = %@", advertisementData);
     
-    return advertisementData;
     
-    NSMutableArray *services = [[NSMutableArray alloc] init];
+//    NSMutableArray *services = [[NSMutableArray alloc] init];
     
 
     NSArray *keys = [advertisementData allKeys];
@@ -278,15 +279,15 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
                     
                     NSString *str = [[NSString alloc] initWithData:uuid.data encoding:NSUTF8StringEncoding];
                     
-                    if (str)
-                        [services addObject:str];
+//                    if (str)
+//                        [services addObject:str];
                     
                 } else {
                     const char *valueString = [[value description] cStringUsingEncoding: NSUTF8StringEncoding];
                     printf("      value(%d): %s\n", j, valueString);
                     
-                    if ([value description])
-                        [services addObject:[value description]];
+//                    if ([value description])
+//                        [services addObject:[value description]];
                 }
             }
         } else {
@@ -295,6 +296,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
         }
     }
     
+    return advertisementData;
 }
 
 
