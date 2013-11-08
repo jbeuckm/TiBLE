@@ -178,7 +178,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 -(id)state
 {
     if (self.manager) {
-        return self.manager.state;
+        return [self decodeState:self.manager.state];
     }
     else {
         return nil;
@@ -333,30 +333,38 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     
-    NSString *state;
-    
-    if (central.state == CBCentralManagerStatePoweredOn) {
-        state = @"on";
-//        [self startScan:nil];
-    }
-    if (central.state == CBCentralManagerStateUnknown) {
-        state = @"unknown";
-    }
-    if (central.state == CBCentralManagerStateResetting) {
-        state = @"resetting";
-    }
-    if (central.state == CBCentralManagerStateUnsupported) {
-        state = @"unsupported";
-    }
-    if (central.state == CBCentralManagerStateUnauthorized) {
-        state = @"unauthorized";
-    }
-    if (central.state == CBCentralManagerStatePoweredOff) {
-        state = @"off";
-    }
+    NSString *state = [self decodeState:central.state];
 
     [self fireEvent:@"state" withObject:[NSDictionary dictionaryWithObjectsAndKeys:state, @"state", nil]];
 }
+
+-(NSString *)decodeState:(NSInteger)state {
+    
+    NSString *result;
+    
+    if (state == CBCentralManagerStatePoweredOn) {
+        result = @"on";
+        //        [self startScan:nil];
+    }
+    if (state == CBCentralManagerStateUnknown) {
+        result = @"unknown";
+    }
+    if (state == CBCentralManagerStateResetting) {
+        result = @"resetting";
+    }
+    if (state == CBCentralManagerStateUnsupported) {
+        result = @"unsupported";
+    }
+    if (state == CBCentralManagerStateUnauthorized) {
+        result = @"unauthorized";
+    }
+    if (state == CBCentralManagerStatePoweredOff) {
+        result = @"off";
+    }
+    
+    return result;
+}
+
 
 #pragma mark - Protocol Methods - CBPeripheralDelegate
 
