@@ -250,6 +250,17 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 */
 }
 
+-(void)connectPeripheral:(id)args {
+
+    ENSURE_UI_THREAD_1_ARG(args);
+    ENSURE_SINGLE_ARG(args, NSDictionary);
+    
+    [self stopScan:nil];
+    
+    [manager connectPeripheral:peripheral options:nil];
+}
+
+
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     
     [self fireEvent:@"connectFail" withObject:[self eventForPeripheral:peripheral]];
