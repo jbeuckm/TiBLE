@@ -232,33 +232,37 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     if (RSSI)
     [report setObject:RSSI forKey:@"rssi"];
     
-    if (advertisementData)
+    if (advertisementData) {
         [report setObject:[self summarizeAdvertisement:advertisementData] forKey:@"advertisementData"];
-
+    }
     
     [self fireEvent:@"discover" withObject:report];
     
-    
-/*
-    if (self.peripheral != peripheral) {
-        self.peripheral = peripheral;
-    }
-    
-    [self stopScan:nil];
-    
-    [central connectPeripheral:peripheral options:nil];
-*/
 }
 
--(void)connectPeripheral:(id)args {
+-(void)connectPeripheral:(NSArray *)args {
 
     ENSURE_UI_THREAD_1_ARG(args);
-    ENSURE_SINGLE_ARG(args, NSDictionary);
     
     [self stopScan:nil];
     
-    [manager connectPeripheral:peripheral options:nil];
+    if (args.count != 0) {
+        NSString *uuidString = [TiUtils stringValue:[args objectAtIndex:0]];
+
+        CFUUIDRef uuid = CFUUIDCreateFromString(NULL, (CFStringRef)uuidString);
+        if (!uuid)
+            return;
+        
+        [self.manager retrievePeripherals:[NSArray arrayWithObject:(id)uuid]];
+    }
+
 }
+- (void)centralManager:(CBCentralManager *)central didRetrievePeripherals:(NSArray *)peripherals {
+    
+    self.peripheral = [peripherals objectAtIndex:0];
+    [self.manager connectPeripheral:self.peripheral options:nil];
+}
+
 
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
