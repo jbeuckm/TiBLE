@@ -155,10 +155,14 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     
         [self.manager scanForPeripheralsWithServices:uuids options:options];
     }
+    [self fireEvent:@"scanStart" withObject:nil];
 }
 
 - (void)stopScan:(id)args {
     [self.manager stopScan];
+    
+    [self fireEvent:@"scanStop" withObject:nil];
+
 }
 
 
