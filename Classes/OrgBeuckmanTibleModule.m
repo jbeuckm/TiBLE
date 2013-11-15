@@ -490,11 +490,14 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
 - (NSDictionary *)descriptionForCharacteristic:(CBCharacteristic *)characteristic {
 
     NSMutableDictionary *desc = [[NSMutableDictionary alloc] init];
-    
+
+    [desc setObject:[self stringFromCBUUID:characteristic.UUID] forKey:@"uuid"];
+
     NSString *valueString = [[NSString alloc] initWithData:characteristic.value encoding:NSUTF8StringEncoding];
     NSLog(@"characteristic.value = %@", characteristic.value);
     if (valueString)
     [desc setObject:valueString forKey:@"value"];
+    [desc setObject:[characteristic.value description] forKey:@"description"];
     
     return desc;
 }
