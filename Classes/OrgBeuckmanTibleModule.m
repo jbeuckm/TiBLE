@@ -22,10 +22,7 @@
 
 #pragma mark - Constants
 
-static NSString *const kServiceUUID = @"5B2EABB7-93CB-4C6A-94D4-C6CF2F331ED5";
 static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA";
-
-static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC940";
 
 
 
@@ -43,7 +40,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 	return @"org.beuckman.tible";
 }
 
--(NSDictionary*)eventForPeripheral:(CBPeripheral *)peripheral
+-(NSDictionary*)descriptionForPeripheral:(CBPeripheral *)peripheral
 {
     NSString *uuid = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, peripheral.UUID));
 
@@ -197,19 +194,20 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     
     NSLog(@"[INFO] didConnectPeripheral %@", peripheral.name);
-    [self fireEvent:@"connect" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"connect" withObject:[self descriptionForPeripheral:peripheral]];
     
-    CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
+//    CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
     peripheral.delegate = self;
 //    [peripheral discoverServices:@[serviceUUID]];
     [peripheral discoverServices:nil];
 
 }
 
+
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     
     NSLog(@"[INFO] didDisconnectPeripheral %@", peripheral.name);
-    [self fireEvent:@"disconnect" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"disconnect" withObject:[self descriptionForPeripheral:peripheral]];
 
     if (self.peripheral == peripheral) {
         self.peripheral = nil;
@@ -233,6 +231,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     [report setObject:RSSI forKey:@"rssi"];
     
     if (advertisementData) {
+        NSLog(@"[DEBUG] advertisementData = %@", advertisementData);
         [report setObject:[self summarizeAdvertisement:advertisementData] forKey:@"advertisementData"];
     }
     
@@ -249,7 +248,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
     if (args.count != 0) {
         NSString *uuidString = [TiUtils stringValue:[args objectAtIndex:0]];
 
-        CFUUIDRef uuid = CFUUIDCreateFromString(NULL, (CFStringRef)uuidString);
+        CFUUIDRef uuid = CFUUIDCreateFromString(kCFAllocatorDefault, (CFStringRef)uuidString);
         if (!uuid)
             return;
         
@@ -267,7 +266,7 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     
-    [self fireEvent:@"connectFail" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"connectFail" withObject:[self descriptionForPeripheral:peripheral]];
 
     if (self.peripheral == peripheral) {
         self.peripheral = nil;
@@ -336,11 +335,11 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
  */
         }
         else {
-            [summary addObject:[value description] forKey:keyName];
+            [summary setObject:[value description] forKey:keyName];
         }
     }
     
-    [summary addObject:services forKey:@"services"];
+    [summary setObject:services forKey:@"services"];
     
     return summary;
 }
@@ -383,65 +382,121 @@ static NSString *const kCharacteristicUUID = @"D589A9D6-C7EE-44FC-8F0E-46DD631EC
 
 #pragma mark - Protocol Methods - CBPeripheralDelegate
 
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
-    
-    [self fireEvent:@"characteristics" withObject:[self eventForPeripheral:peripheral]];
-
-    if (error != nil) {
-        NSLog(@"[ERROR] Error discovering characteristic: %@", [error localizedDescription]);
-        
-        return;
-    }
-    
-    CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
-    
-    if ([service.UUID isEqual:serviceUUID]) {
-        CBUUID *characteristicUUID = [CBUUID UUIDWithString:kCharacteristicUUID];
-        
-        for (CBCharacteristic *characteristic in service.characteristics) {
-            
-            if ([characteristic.UUID isEqual:characteristicUUID]) {
-                [peripheral setNotifyValue:YES forCharacteristic:characteristic];
-            }
-        }
-    }
-}
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
     
-    [self fireEvent:@"services" withObject:[self eventForPeripheral:peripheral]];
-
     if (error != nil) {
         NSLog(@"[ERROR] Error discovering service: %@", [error localizedDescription]);
         
         return;
     }
-    
+    else {
     
     NSLog(@"%@", peripheral.services);
+        
+    NSMutableArray *serviceDescriptions = [[NSMutableArray alloc] init];
     
     for (CBService *service in peripheral.services) {
-        CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
         
-        if ([service.UUID isEqual:serviceUUID]) {
-            CBUUID *characteristicUUID = [CBUUID UUIDWithString:kCharacteristicUUID];
-            [peripheral discoverCharacteristics:@[characteristicUUID] forService:service];
-        }
+        [peripheral discoverCharacteristics:nil forService:service];
         
-        if ([service.UUID isEqual:[CBUUID UUIDWithString:CBUUIDGenericAccessProfileString]]) {
-            [peripheral discoverCharacteristics:nil forService:service];
-        }
+        [serviceDescriptions addObject:[self descriptionForService:service]];
+        
+        /*
+         CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
+         
+         if ([service.UUID isEqual:serviceUUID]) {
+         CBUUID *characteristicUUID = [CBUUID UUIDWithString:kCharacteristicUUID];
+         [peripheral discoverCharacteristics:@[characteristicUUID] forService:service];
+         }
+         
+         if ([service.UUID isEqual:[CBUUID UUIDWithString:CBUUIDGenericAccessProfileString]]) {
+         [peripheral discoverCharacteristics:nil forService:service];
+         }
+         */
     }
+
+        
+        [self fireEvent:@"services" withObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                                [self descriptionForPeripheral:peripheral], @"peripheral",
+                                                serviceDescriptions, @"services", nil
+                                                ]
+        ];
+    }
+    
 }
+
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
+    
+    if (error != nil) {
+        NSLog(@"[ERROR] Error discovering characteristic: %@", [error localizedDescription]);
+        
+        return;
+    }
+    else {
+//    CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
+    
+//    if ([service.UUID isEqual:serviceUUID]) {
+//        CBUUID *characteristicUUID = [CBUUID UUIDWithString:kCharacteristicUUID];
+        
+        NSMutableArray *characteristicDescriptions = [[NSMutableArray alloc] init];
+        
+        for (CBCharacteristic *characteristic in service.characteristics) {
+            
+//            if ([characteristic.UUID isEqual:characteristicUUID]) {
+                [peripheral setNotifyValue:YES forCharacteristic:characteristic];
+//            }
+            
+            [characteristicDescriptions addObject:[self descriptionForCharacteristic:characteristic]];
+        }
+//    }
+
+        [self fireEvent:@"characteristics" withObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                       [self descriptionForPeripheral:peripheral], @"peripheral",
+                                                       [self descriptionForService:service], @"service",
+                                                       characteristicDescriptions, @"characteristics",
+                                                       nil]
+         ];
+        
+    }
+    
+    
+}
+
+-(NSDictionary *)descriptionForService:(CBService *)service {
+    NSMutableDictionary *desc = [[NSMutableDictionary alloc] init];
+    
+    [desc setObject:[self stringFromCBUUID:service.UUID] forKey:@"uuid"];
+    
+    return desc;
+}
+
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     
-    [self fireEvent:@"value" withObject:[self eventForPeripheral:peripheral]];
+    [self fireEvent:@"characteristicValue" withObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                        [self descriptionForPeripheral:peripheral], @"peripheral",
+                                        [self descriptionForCharacteristic:characteristic], @"characteristic", nil]
+     ];
 
+    NSLog(@"didUpdateValueForCharacteristic %@", characteristic);
+    
     if (error != nil) {
         NSLog(@"[ERROR] Error updating value: %@", error.localizedDescription);
         return;
     }
+}
+
+- (NSDictionary *)descriptionForCharacteristic:(CBCharacteristic *)characteristic {
+
+    NSMutableDictionary *desc = [[NSMutableDictionary alloc] init];
+    
+    NSString *valueString = [[NSString alloc] initWithData:characteristic.value encoding:NSUTF8StringEncoding];
+    NSLog(@"characteristic.value = %@", characteristic.value);
+    if (valueString)
+    [desc setObject:valueString forKey:@"value"];
+    
+    return desc;
 }
 
 
