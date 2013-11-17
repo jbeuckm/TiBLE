@@ -241,6 +241,8 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     
     [self fireEvent:@"discover" withObject:report];
     
+    [report autorelease];
+    
 }
 
 -(void)connectPeripheral:(NSArray *)args {
@@ -344,8 +346,9 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     }
     
     [summary setObject:services forKey:@"services"];
+    [services release];
     
-    return summary;
+    return [summary autorelease];
 }
 
 
@@ -396,15 +399,15 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     }
     else {
     
-    NSLog(@"%@", peripheral.services);
+        NSLog(@"%@", peripheral.services);
         
-    NSMutableArray *serviceDescriptions = [[NSMutableArray alloc] init];
+        NSMutableArray *serviceDescriptions = [[NSMutableArray alloc] init];
     
-    for (CBService *service in peripheral.services) {
+        for (CBService *service in peripheral.services) {
         
-        [peripheral discoverCharacteristics:nil forService:service];
+            [peripheral discoverCharacteristics:nil forService:service];
         
-        [serviceDescriptions addObject:[self descriptionForService:service]];
+            [serviceDescriptions addObject:[self descriptionForService:service]];
         
         /*
          CBUUID *serviceUUID = [CBUUID UUIDWithString:kServiceUUID];
@@ -418,7 +421,7 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
          [peripheral discoverCharacteristics:nil forService:service];
          }
          */
-    }
+        }
 
         
         [self fireEvent:@"services" withObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:
@@ -426,6 +429,8 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
                                                 serviceDescriptions, @"services", nil
                                                 ]
         ];
+        
+        [serviceDescriptions release];
     }
     
 }
@@ -462,6 +467,8 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
                                                        nil]
          ];
         
+        [characteristicDescriptions release];
+        
     }
     
     
@@ -471,8 +478,8 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     NSMutableDictionary *desc = [[NSMutableDictionary alloc] init];
     
     [desc setObject:[self stringFromCBUUID:service.UUID] forKey:@"uuid"];
-    
-    return desc;
+
+    return [desc autorelease];
 }
 
 
@@ -506,8 +513,8 @@ static NSString *const kFlexServiceUUID = @"ADABFB00-6E7D-4601-BDA2-BFFAA68956BA
     NSString *valueDesc = [characteristic.value description];
     if (valueDesc)
     [desc setObject:valueDesc forKey:@"description"];
-    
-    return desc;
+
+    return [desc autorelease];
 }
 
 
