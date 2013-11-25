@@ -38,3 +38,5 @@ ble.addEventListener("value", function(e){
 ble.startScan();
 
 ```
+
+Please see the test app: [https://github.com/jbeuckm/TiBLE-Test-App](https://github.com/jbeuckm/TiBLE-Test-App)
